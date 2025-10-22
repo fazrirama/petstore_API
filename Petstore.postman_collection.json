@@ -1,0 +1,1529 @@
+{
+	"info": {
+		"_postman_id": "45fddf3b-6ce1-43af-8d85-51018fe74708",
+		"name": "Petstore",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "24300336"
+	},
+	"item": [
+		{
+			"name": "Positive",
+			"item": [
+				{
+					"name": "TC_Normal_001-Create User",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const randomSuffix = Math.floor(Math.random() * 100000);\r",
+									"var username = \"fazri_\" + randomSuffix;\r",
+									"var email = \"fazri_\" + randomSuffix + \"@example.com\";\r",
+									"var password = \"Pass_\" + randomSuffix;\r",
+									"\r",
+									"function safeSetVar(key, value) {\r",
+									"    try {\r",
+									"        if (pm.environment && pm.environment.name) {\r",
+									"            pm.environment.set(key, value);\r",
+									"            console.log(\"Set env var:\", key, \"=\", value);\r",
+									"        } else {\r",
+									"            pm.globals.set(key, value);\r",
+									"            console.warn(\"No active environment — saved to globals instead:\", key, \"=\", value);\r",
+									"        }\r",
+									"    } catch (e) {\r",
+									"        try {\r",
+									"            pm.globals.set(key, value);\r",
+									"            console.warn(\"Exception while setting env var — fallback to globals:\", key, \"=\", value, \"err:\", e);\r",
+									"        } catch (e2) {\r",
+									"            console.error(\"Failed setting variable:\", key, value, e2);\r",
+									"        }\r",
+									"    }\r",
+									"}\r",
+									"\r",
+									"safeSetVar(\"username\", username);\r",
+									"safeSetVar(\"email\", email);\r",
+									"safeSetVar(\"password\", password);\r",
+									"\r",
+									"console.log(\"Generated username:\", username);\r",
+									"console.log(\"Generated email:\", email);\r",
+									"console.log(\"Generated password:\", password);"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"let jsonData;\r",
+									"try {\r",
+									"    jsonData = pm.response.json();\r",
+									"} catch (err) {\r",
+									"    pm.test(\"Response is valid JSON\", function () {\r",
+									"        throw new Error(\"Response is not JSON: \" + err);\r",
+									"    });\r",
+									"    return;\r",
+									"}\r",
+									"\r",
+									"pm.test(\"Response has correct fields\", function () {\r",
+									"    pm.expect(jsonData).to.have.property(\"code\");\r",
+									"    pm.expect(jsonData).to.have.property(\"message\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Payload code is 200\", function () {\r",
+									"    pm.expect(jsonData.code).to.eql(200);\r",
+									"});\r",
+									"\r",
+									"if (jsonData.message) {\r",
+									"    pm.environment.set(\"createdUserId\", jsonData.message);\r",
+									"    console.log(\"User created ID:\", jsonData.message);\r",
+									"} else {\r",
+									"    console.warn(\"No message field found in response\");\r",
+									"}\r",
+									"\r",
+									"// Optional: log detail ke console\r",
+									"console.log(\"Full response:\", jsonData);"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"id\": {{uniqueUserId}},\r\n  \"username\": \"{{username}}\",\r\n  \"firstName\": \"Auto\",\r\n  \"lastName\": \"Tester\",\r\n  \"email\": \"qa+{{uniqueUserId}}@example.com\",\r\n  \"password\": \"{{password}}\",\r\n  \"phone\": \"08123456789\",\r\n  \"userStatus\": 1\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/user",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"user"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "TC_Normal_002-Get User by username",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const username = pm.environment.get(\"username\");\r",
+									"\r",
+									"if (!username) {\r",
+									"    console.warn(\"Environment variable 'username' not found! Did you run Create User first?\");\r",
+									"} else {\r",
+									"    console.log(\"Using username:\", username);\r",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"let jsonData;\r",
+									"try {\r",
+									"    jsonData = pm.response.json();\r",
+									"} catch (err) {\r",
+									"    pm.test(\"Response is valid JSON\", function () {\r",
+									"        throw new Error(\"Response is not JSON: \" + err);\r",
+									"    });\r",
+									"    return; // stop if invalid JSON\r",
+									"}\r",
+									"pm.test(\"Response contains username & email\", function () {\r",
+									"    pm.expect(jsonData).to.have.property(\"username\");\r",
+									"    pm.expect(jsonData).to.have.property(\"email\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Username matches created user\", function () {\r",
+									"    const expectedUsername = pm.environment.get(\"username\");\r",
+									"    pm.expect(jsonData.username).to.eql(expectedUsername);\r",
+									"});\r",
+									"\r",
+									"if (jsonData.id) {\r",
+									"    pm.environment.set(\"userId\", jsonData.id);\r",
+									"    console.log(\"User ID saved:\", jsonData.id);\r",
+									"} else {\r",
+									"    console.warn(\"No userId field in response\");\r",
+									"}\r",
+									"\r",
+									"const expectedEmail = pm.environment.get(\"email\");\r",
+									"if (expectedEmail) {\r",
+									"    pm.test(\"Email matches created user\", function () {\r",
+									"        pm.expect(jsonData.email).to.eql(expectedEmail);\r",
+									"    });\r",
+									"}\r",
+									"\r",
+									"console.log(\"Full user detail:\", jsonData);"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{baseURL}}/user/{{username}}",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"user",
+								"{{username}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "TC_Normal_003-Login User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/user/login?username={{username}}&password={{password}}",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"user",
+								"login"
+							],
+							"query": [
+								{
+									"key": "username",
+									"value": "{{username}}"
+								},
+								{
+									"key": "password",
+									"value": "{{password}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "TC_Normal_004-Create/Add Pet",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// generate id unique\r",
+									"let uid = Math.floor(Date.now() / 100);\r",
+									"pm.environment.set(\"uniqueId\", uid);"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let json = pm.response.json();\r",
+									"\r",
+									"//Status code\r",
+									"pm.test(\"Status code 200\", () => {\r",
+									"  pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"//Check id response\r",
+									"pm.test(\"Response terdapat id\", () => {\r",
+									"  pm.expect(json).to.have.property(\"id\");\r",
+									"});\r",
+									"\r",
+									"//Save id to env\r",
+									"pm.environment.set(\"petId\", json.id);\r",
+									"pm.environment.set(\"petName\", json.name);"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"id\": {{uniqueId}},\r\n  \"category\": { \r\n    \"id\": 0, \r\n    \"name\": \"string\" \r\n    },\r\n    \"name\": \"Kucing-{{uniqueId}}\",\r\n    \"photoUrls\": [\r\n        \"https://example.com/photo1\"\r\n    ],\r\n    \"tags\": [\r\n        { \r\n        \"id\": 0, \r\n        \"name\": \"string\" \r\n        }\r\n    ],\r\n  \"status\": \"available\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/pet",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"pet"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "TC_Normal_005-Get Pet by ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code 200\", () => {\r",
+									"  pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"let json = pm.response.json();\r",
+									"pm.test(\"ID Latest Created\", () => {\r",
+									"  pm.expect(json.id).to.eql(Number(pm.environment.get(\"petId\")));\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/pet/{{petId}}",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"pet",
+								"{{petId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "TC_Normal_006-Create Order",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"pm.environment.set(\"uniqueOrderId\", Math.floor(Date.now() / 1000));"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let json = pm.response.json();\r",
+									"pm.test(\"Status 200\", () => pm.response.to.have.status(200));\r",
+									"pm.test(\"Ada id order\", () => pm.expect(json).to.have.property(\"id\"));\r",
+									"pm.environment.set(\"orderId\", json.id);"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"id\": {{uniqueOrderId}},\r\n  \"petId\": {{petId}},\r\n  \"quantity\": 1,\r\n  \"shipDate\": \"2025-10-22T10:00:00.000Z\",\r\n  \"status\": \"placed\",\r\n  \"complete\": true\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/store/order",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"store",
+								"order"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "TC_Normal_008-Delete Order",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"let jsonData;\r",
+									"try {\r",
+									"    jsonData = pm.response.json();\r",
+									"} catch (err) {\r",
+									"    pm.test(\"Response is valid JSON\", function () {\r",
+									"        throw new Error(\"Response not JSON: \" + err);\r",
+									"    });\r",
+									"    return;\r",
+									"}\r",
+									"\r",
+									"pm.test(\"Response has 'message' and matches orderId\", function () {\r",
+									"    pm.expect(jsonData).to.have.property(\"message\");\r",
+									"    pm.expect(jsonData.message).to.eql(pm.environment.get(\"orderId\").toString());\r",
+									"});\r",
+									"\r",
+									"console.log(\"🧾 Order deleted successfully:\");\r",
+									"console.log(\"   Order ID  :\", pm.environment.get(\"orderId\"));\r",
+									"console.log(\"   Response  :\", JSON.stringify(jsonData, null, 2));\r",
+									"\r",
+									"pm.environment.unset(\"orderId\");"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/store/order/{{orderId}}",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"store",
+								"order",
+								"{{orderId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "TC_Normal_009-Update Pet",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let json = pm.response.json();\r",
+									"let expectedStatus = pm.environment.get(\"petStatus\");\r",
+									"\r",
+									"pm.test(\"Status code 200\", () => pm.response.to.have.status(200));\r",
+									"pm.test(\"Status random\", () => pm.expect(json.status).to.eql(expectedStatus));\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const statuses = [\"sold\"];\r",
+									"const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];\r",
+									"pm.environment.set(\"petStatus\", randomStatus);\r",
+									"console.log(\"Random status set to:\", randomStatus);"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"id\": {{petId}},\r\n  \"name\": \"Kucing-baru-{{petId}}\",\r\n  \"photoUrls\": [\r\n        \"https://example.com/photo2\"\r\n    ],\r\n    \"tags\": [\r\n        { \r\n        \"id\": 0, \r\n        \"name\": \"Indo\" \r\n        }\r\n    ],\r\n  \"status\": \"{{petStatus}}\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/pet",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"pet"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "TC_Normal_010-Get Pet by Status",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"// parsing JSON response\r",
+									"let pets = pm.response.json();\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"if (!pm.environment.get(\"petStatus\")) {\r",
+									"    pm.environment.set(\"petStatus\", \"available\");\r",
+									"}\r",
+									"\r",
+									"// log biar keliatan di console\r",
+									"console.log(\"Find pets by status:\", pm.environment.get(\"petStatus\"));"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/pet/findByStatus?status={{petStatus}}",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"pet",
+								"findByStatus"
+							],
+							"query": [
+								{
+									"key": "status",
+									"value": "{{petStatus}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "TC_Normal_007-Get Order by ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status 200\", () => pm.response.to.have.status(200));\r",
+									"\r",
+									"let json = pm.response.json();\r",
+									"pm.test(\"Order ID sesuai\", () => {\r",
+									"  pm.expect(json.id).to.eql(Number(pm.environment.get(\"orderId\")));\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/store/order/{{orderId}}",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"store",
+								"order",
+								"{{orderId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "TC_Normal_011-Logout User",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"let username = pm.environment.get(\"username\");\r",
+									"let password = pm.environment.get(\"password\");\r",
+									"\r",
+									"if (!username || !password) {\r",
+									"    console.warn(\"Belum ada user login. Jalankan request 'Login User' dulu.\");\r",
+									"} else {\r",
+									"    console.log(\"Logout untuk user:\", username);\r",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Logout berhasil\", function () {\r",
+									"    let text = pm.response.text().toLowerCase();\r",
+									"    pm.expect(text).to.include(\"logged out\");\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/user/logout?username={{username}}",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"user",
+								"logout"
+							],
+							"query": [
+								{
+									"key": "username",
+									"value": "{{username}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "TC_Normal_012-Delete Pet",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"if (!pm.environment.get(\"petId\")) {\r",
+									"    console.warn(\"petId not found. Create/Add Pet first\");\r",
+									"} else {\r",
+									"    console.log(\"Delete Pet ID:\", pm.environment.get(\"petId\"));\r",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code 200 atau 204\", () => {\r",
+									"    pm.expect([200, 204]).to.include(pm.response.code);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response berisi pesan sukses\", () => {\r",
+									"    let body = pm.response.text().toLowerCase();\r",
+									"    pm.expect(body).to.include(\"ok\").or.to.include(\"deleted\").or.to.include(\"successful\");\r",
+									"});\r",
+									"\r",
+									"// Bersihkan variable dari environment agar chaining aman\r",
+									"pm.environment.unset(\"petId\");\r",
+									"pm.environment.unset(\"petName\");\r",
+									"\r",
+									"console.log(\"Pet berhasil dihapus. Variable environment dibersihkan.\");"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{baseURL}}/pet/{{petId}}",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"pet",
+								"{{petId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "TC_Normal_013-Delete User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"let jsonData;\r",
+									"try {\r",
+									"    jsonData = pm.response.json();\r",
+									"} catch (err) {\r",
+									"    pm.test(\"Response is valid JSON\", function () {\r",
+									"        throw new Error(\"Response not JSON: \" + err);\r",
+									"    });\r",
+									"    return;\r",
+									"}\r",
+									"\r",
+									"\r",
+									"pm.test(\"Response contains message field\", function () {\r",
+									"    pm.expect(jsonData).to.have.property(\"message\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Message matches username\", function () {\r",
+									"    pm.expect(jsonData.message).to.eql(pm.environment.get(\"username\"));\r",
+									"});\r",
+									"\r",
+									"console.log(\"👤 User deleted successfully:\");\r",
+									"console.log(\"   Username  :\", pm.environment.get(\"username\"));\r",
+									"console.log(\"   Response  :\", JSON.stringify(jsonData, null, 2));\r",
+									"\r",
+									"[\"username\", \"email\", \"password\", \"createdUserId\"].forEach(v => pm.environment.unset(v));"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{baseURL}}/user/{{username}}",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"user",
+								"{{username}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Negative",
+			"item": [
+				{
+					"name": "TC_Negative_01",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{baseURL}}/user/{randomUsername}",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"user",
+								"{randomUsername}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "TC_Negative_02",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/user/login?username=invalidUser&password=wrong",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"user",
+								"login"
+							],
+							"query": [
+								{
+									"key": "username",
+									"value": "invalidUser"
+								},
+								{
+									"key": "password",
+									"value": "wrong"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "TC_Negative_03",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/user/{randomUsername}",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"user",
+								"{randomUsername}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "TC_Negative_04",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/pet/1110000000",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"pet",
+								"1110000000"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "TC_Negative_05",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/pet/1021021020120120",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"pet",
+								"1021021020120120"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "TC_Negative_06",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/store/order/11010101010",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"store",
+								"order",
+								"11010101010"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "TC_Negative_07",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{baseURL}}/store/order/11010101010",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"store",
+								"order",
+								"11010101010"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "TC_Negative_08",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{baseURL}}/user/{randomUsername}",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"user",
+								"{randomUsername}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "TC_Negative_09",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/pet/test",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"pet",
+								"test"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "TC_Negative_10",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/store/order/test",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"store",
+								"order",
+								"test"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "TC_Negative_11",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/user",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"user"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "TC_Negative_12",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/pet",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"pet"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {},
+						"exec": [
+							"const rand = Math.floor(10000 + Math.random() * 90000);\r",
+							"\r",
+							"pm.environment.set(\"randomUsername\", `user_notexist_${rand}`);\r",
+							"pm.environment.set(\"randomPetId\", 700000 + rand);\r",
+							"pm.environment.set(\"randomOrderId\", 800000 + rand);\r",
+							"pm.environment.set(\"invalidId\", \"abc123\");\r",
+							"\r",
+							"console.log(\"Negative data generated:\", {\r",
+							"  randomUsername: pm.environment.get(\"randomUsername\"),\r",
+							"  randomPetId: pm.environment.get(\"randomPetId\"),\r",
+							"  randomOrderId: pm.environment.get(\"randomOrderId\"),\r",
+							"  invalidId: pm.environment.get(\"invalidId\")\r",
+							"});"
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {},
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		}
+	]
+}
